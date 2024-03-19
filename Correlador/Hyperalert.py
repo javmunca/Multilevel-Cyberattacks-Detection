@@ -1,26 +1,19 @@
-from pymongo import * 																													# mongo library
+from pymongo import * 						# mongo library
 from pymongo import MongoClient, errors
-import json 																																		# import the built-in JSON library
-import sys 																																			# get arg
-import shutil 																																	# copy and move files
-import time
-from bson.son import SON																												#mongo map reduce
-import pprint 																																	# to print json format like pretty() in mongo
-import calendar																																	# to get datetime now
-import bisect																											              # to order list with bisection algorithm
+from bson.son import SON					# mongo map reduce
+import pprint 								# to print json format like pretty() in mongo
+import calendar								# to get datetime now
 from iso8601 import parse_date	
-import dateutil.parser as dp																								# to parse isotime to unixtime
-timeChange = False #para la defensa cambiar a false antes de meter los datos en la bd
+timeChange = False 							
 
 #********************************************************
 #   it make the conection to mongodb into a collection
 #********************************************************
 def conectToDB(db, colection):
-
-	conexion = MongoClient('localhost', 27017) 																		#the connection is local 
-	db = conexion[db] 																														#the name of the db
-	coleccion = db[colection]																											#the name of the collection where is the register of file 
-	return coleccion																															# from snort insert in mongo and where is reading the file
+	conexion = MongoClient('localhost', 27017) 			#the connection is local 
+	db = conexion[db] 									#the name of the db
+	coleccion = db[colection]							#the name of the collection where is the register of file 
+	return coleccion									#from snort insert in mongo and where is reading the file
 
 def conectToDBNodes():
 	conexion = conectToDB("tranalyzer","nodes")
@@ -89,7 +82,7 @@ def getIPListAlerts():
 			listIP.append(str(ip["dstIP"]))
 			listIP.sort() 
 
-	return listIP                                                      # "srcIP":192.168.1.1
+	return listIP                                         # "srcIP":192.168.1.1
 	
 #***********************************************************
 #  get the last event time processed
@@ -102,15 +95,15 @@ def GetlastTimeAnalized():
 	listCollection = getAllCollections("tranalyzer")
 	lasTime=[]
 	
-	for col in listCollection: 																										#iterate over the list of collection names
+	for col in listCollection: 								#iterate over the list of collection names
 		if(str(col) == 'timeAnalized'):
-			exist = 1 																																#timeAnalized exist get lastTimeAnalized
+			exist = 1 										#timeAnalized exist get lastTimeAnalized
 			lasTime = colTime.find()
 			for t in lasTime:
 				time = t["lastTimeAnalized"]
-	if(exist == 0):																																#timeAnalized doesn't exist, create collection and lastTimeAnalized=0																						
+	if(exist == 0):											#timeAnalized doesn't exist, create collection and lastTimeAnalized=0																						
 		myJson= {"lastTimeAnalized": 0}
-		colTime.insert_one(myJson).inserted_id 																			#Insert new time in mongo and create collection
+		colTime.insert_one(myJson).inserted_id 				#Insert new time in mongo and create collection
 	return time
 #***********************************************************
 #  update into lastTimeAnalized the last event time analized
@@ -127,7 +120,7 @@ def UpdateLTAnalized(sg):
 	query = {"_id":idtime}
 	updates = {"$set": {"lastTimeAnalized": sg}}
 	
-	conexion.update_one(query, updates) 																					#update mongo
+	conexion.update_one(query, updates) 					#update mongo
 	
 	
 #****************************************************************************
@@ -136,28 +129,24 @@ def UpdateLTAnalized(sg):
 def getAllCollections(sDB):
 	domain = 'localhost:'
 	port = 27017
-																																								# use a try-except indentation to catch MongoClient() errors
-	try: 																																					# try to instantiate a client instance
-		  client = MongoClient(
-		      host = [ str(domain) + str(port) ],
-		      serverSelectionTimeoutMS = 3000 																			# 3 second timeout
-		  )
-	except errors.ServerSelectionTimeoutError as err:
-		  																																					# set the client instance to 'None' if exception
-		  client = None
-		  																																					# catch pymongo.errors.ServerSelectionTimeoutError
-		  print ("pymongo ERROR:", err)
+																					# use a try-except indentation to catch MongoClient() errors
+	try: 																			# try to instantiate a client instance
+		client = MongoClient(
+		    host = [ str(domain) + str(port) ],
+		    serverSelectionTimeoutMS = 3000 										# 3 second timeout
+		)
+	except errors.ServerSelectionTimeoutError as err:							    # set the client instance to 'None' if exception
+		client = None																# catch pymongo.errors.ServerSelectionTimeoutError
+		print ("pymongo ERROR:", err)
 
 	if client != None:
-		database_names = client.list_database_names() 															# the list_database_names() method returns a list of strings
-		
-		for db in enumerate(database_names): 																				# iterate over the list of db
+		database_names = client.list_database_names() 								# the list_database_names() method returns a list of strings
+		for db in enumerate(database_names): 										# iterate over the list of db
 			if (str(db[1]) == sDB):
-				collection_names = client[db[1]].list_collection_names() 								#  list_collection_names() return collection names
-		return collection_names 																										#the list of collections from tranalyzer db
+				collection_names = client[db[1]].list_collection_names() 			# list_collection_names() return collection names
+		return collection_names 													# the list of collections from tranalyzer db
 	else:
 		print ("The domain and port parameters passed to client's host is invalid")
- 
 
 	 
 #*************************************
@@ -200,7 +189,6 @@ def parsertime():
 #*******************************************************
 def getListOfSecondsA():
 	alerts = conectToDBAlerts()
-	eventos = []
 	seconds = []
 	
 	alertasS = [{"$unwind":"$event.event-second"},{"$group":{"_id":{"event-second":"$event.event-second",  "srcIP":"$event.source-ip", "destIP":"$event.destination-ip", "srcPort":"$event.sport-itype", "destPort":"$event.dport-icode"}, "count":{"$sum":1}}}, {"$sort":SON([("event.event-second",-1)])}] #de tiempo mas antiguo a mas reciente menos a mas segundos
@@ -218,17 +206,14 @@ def getListOfSecondsA():
 #***********************************************************************************
 def getListOfSecondsF():
 	flows = conectToDBFlow()
-	flowTime = []
 	seconds =[]
-	 
+	
 	flowSec= [{"$unwind":"$timeFirst"},{"$group":{"_id":{"secondsInit":"$timeFirst", "secondsFin":"$timeLast","srcIP":"$srcIP", "srcPort": "$srcPort",  "dstIP": "$dstIP", "dstPort":"$dstPort", "_id":"$_id","nDPIclass" :"$nDPIclass"}, "count":{"$sum":1}}}, {"$sort":SON([("timeFirst",-1)])}]
-		
-		
+
 	agrupflowtime = flows.aggregate(flowSec)
 
 	for i in agrupflowtime: 
 		seconds.append(i['_id'])
-		#pprint.pprint(seconds)
 		
 	return seconds
 #end getListOfSecondsF
@@ -324,22 +309,6 @@ def isBetweenPeriod(sgInit, sgFin , num, period):
 				new = True
 					
 	return new
-	# new = False
-	# sgFin =dp.parse( str(sgFin))
-	# sgInit =dp.parse( str(sgInit))
-	# totalFlowSc = sgFin - sgInit 
-	# period0 = isoToUnixtime(int(period))
-	# print(period0)
-	# try :
-	# 	if isoToUnixtime(totalFlowSc) <= isoToUnixtime(period):
-	# 		if num <= isoToUnixtime(totalFlowSc):
-	# 			new = True
-	# except:
-	# 	if totalFlowSc <=  period:
-	# 		if num <= totalFlowSc:
-	# 			new = True
-
-	# return  new
 
 def menu():
 
@@ -375,9 +344,8 @@ def menu():
 		alerts = conectToDBAlerts()
 		flow = conectToDBFlow()	
 		hiperA = conectToDBHypera()																#hiperAlert collection in mongodb 
-		hiperA.drop()																																	#delete all hiperAlerts
+		hiperA.drop()																			#delete all hiperAlerts
 		tupla = []
-		count =[]
 		idAlertas = []
 		
 		#find the same ip and aggregate:
@@ -386,7 +354,6 @@ def menu():
 
 		for a in agrupIP:
 			tupla= a["_id"]
-			count= a["count"]
 			destIP = str(tupla['destIP']) #get the field destIP from agrupIP
 			srcIP = str(tupla['srcIP']) 
 			srcPort = int(tupla['srcPort'])
@@ -404,30 +371,21 @@ def menu():
 			for c in findfl:
 				flowid = c["_id"]
 				prot = c["nDPIclass"]
-				#pprint.pprint(c["_id"])
-				#pprint.pprint(c["nDPIclass"])
 			
-			#insert into hiperalertas tupla, count, b["_id"], flows and the protocol type
 			myJson= {"tupla": a["_id"],
 					"nAlerts": a["count"],
 					"alerts": idAlertas,
 					"flow" : flowid,
 					"classificationProt":prot}
-			#pprint.pprint(myJson)
 			idAlertas = []																				
-			hiperA.insert_one(myJson).inserted_id																					#Insert new file in mongo
+			hiperA.insert_one(myJson).inserted_id	#Insert new file in mongo
 		
 		h = hiperA.find()
 		print("\n")
 		for n in h:
 			pprint.pprint(n)
 			print("\n----------------------------------------------\n")
-			
-		####prueba de filtro id.alert.event.event....
-		#h = hiperA.find({"idAlertas.alerta.event.event-id": 9})
-		#for n in h:
-		#	pprint.pprint(n)	
-	#end groupby1()
+
 	
 	#**************************************************************************************
 	#   group by alerts in each flow
@@ -450,8 +408,7 @@ def menu():
 		
 		for f in timeFlow: #recorro los flujos
 			for a in timeAlerts: #recorro el json
-				#pprint.pprint(a)
-				if isBetween(f['secondsInit'], f['secondsFin'], a['event-second']): 				#alert in a flow
+				if isBetween(f['secondsInit'], f['secondsFin'], a['event-second']): 			#alert in a flow
 					if "srcIP" in f:
 						if (str(f['srcIP']) == str(a['srcIP'])):
 							if (str(f['srcPort']) == str(a['srcPort'])):
@@ -462,7 +419,6 @@ def menu():
 										srcIP = a["srcIP"]
 										srcPort = a["srcPort"]
 										destPort = a["destPort"]
-										
 										dataAlerts = al.find({"event.destination-ip":destIP, "event.event-second":eventsecond,"event.source-ip":srcIP,"event.sport-itype":srcPort, "event.dport-icode":destPort},{"_id":1,"event.event-id":1, "event.classification" :1, "event.priority":1, "event.event-second":1, "event.event-microsecond":1, "event.destination-ip":1, "event.event-second":1,"event.source-ip":1,"event.sport-itype":1, "event.dport-icode":1})	#buso el resto de datos de esas alertas
 										for da in dataAlerts:
 											event = da["event"]
@@ -474,9 +430,7 @@ def menu():
 											microsecond = event["event-microsecond"]
 											aJson={"alert":{"_id":ide, "event":{"classification": classification,"event-id":eventid,"event-microsecond":microsecond,"event-second":second, "priority":priority}}}
 											alerts.append(aJson) #las guardo en json
-										#print(alerts[0])
 			if len(alerts) > 0:
-				#alertJson = {"alert": {"_id":alerts["_id"], "event":{"Classification" : alerts["Classification"], "event-id" : alerts["event-id"], "event-microsecond" : alerts["event-microsecond"], "event-second" : alerts["event-second"], "priority" : alerts["priority"]}}}
 				myJson = {"flow": f["_id"], "classificationProt":f["nDPIclass"],"tupla":{"srcIP":f['srcIP'],"srcPort": f['srcPort'],"destIP":f['dstIP'],"destPort":f['dstPort'] }, "alerts": alerts}
 				hiperA.insert_one(myJson).inserted_id
 				alerts = []
@@ -502,7 +456,7 @@ def menu():
 			period = int(input())
 		
 		cuenta = 0 #use to count seconds
-		hiperA = conectToDBHypera()																#hiperAlert collection in mongodb
+		hiperA = conectToDBHypera()	#hiperAlert collection in mongodb
 		hiperA.drop()
 		al = conectToDBAlerts()
 		timeAlerts = []
@@ -516,9 +470,8 @@ def menu():
 		
 		for f in timeFlow: #recorro los flujos
 			for a in timeAlerts: #recorro el json
-				#pprint.pprint(a)
 
-				if isBetweenPeriod(f['secondsInit'], f['secondsFin'] , a['event-second'], period): 				#alert in a flow
+				if isBetweenPeriod(f['secondsInit'], f['secondsFin'] , a['event-second'], period): 	#alert in a flow
 					if "srcIP" in f:
 						if (str(f['srcIP']) == str(a['srcIP'])):
 							if (str(f['srcPort']) == str(a['srcPort'])):
@@ -541,9 +494,7 @@ def menu():
 											microsecond = event["event-microsecond"]
 											aJson={"alert":{"_id":ide, "event":{"classification": classification,"event-id":eventid,"event-microsecond":microsecond,"event-second":second, "priority":priority}}}
 											alerts.append(aJson) #las guardo en json
-										#print(alerts[0])
 			if len(alerts) > 0:
-				#alertJson = {"alert": {"_id":alerts["_id"], "event":{"Classification" : alerts["Classification"], "event-id" : alerts["event-id"], "event-microsecond" : alerts["event-microsecond"], "event-second" : alerts["event-second"], "priority" : alerts["priority"]}}}
 				myJson = {"flow": f["_id"], "classificationProt":f["nDPIclass"],"tupla":{"srcIP":f['srcIP'],"srcPort": f['srcPort'],"destIP":f['dstIP'],"destPort":f['dstPort'] }, "alerts": alerts}
 				hiperA.insert_one(myJson).inserted_id
 				alerts = []
@@ -563,10 +514,9 @@ def menu():
 	
 	def groupby4():
 		result = []
-		wrong0 = True
 		wrong1 = True
 		query= "h"
-		hiperA = conectToDBHypera()																#hiperAlert collection in mongodb
+		hiperA = conectToDBHypera()							#hiperAlert collection in mongodb
 		
 		print("which Ip do you want to look for?")
 		ip = str(input("type sth like 192.168.198.203\n"))
@@ -582,11 +532,11 @@ def menu():
 				wrong1 = False
 		
 		if query == "src":
-			#result = hiperA.find({"_id.srcIP":ip})								si group by2
+			#result = hiperA.find({"_id.srcIP":ip})			si group by2
 			result = hiperA.find({"tupla.srcIP":ip})
 			
 		if query == "dst":
-			#result = hiperA.find({"_id.dstIP":ip})								si group by2
+			#result = hiperA.find({"_id.dstIP":ip})			si group by2
 			result = hiperA.find({"tupla.destIP":ip})
 			
 		resultcount = result.count()
@@ -607,7 +557,7 @@ def menu():
 		port = ""
 		wrong1 = True
 		query= "h"
-		hiperA = conectToDBHypera()															#hiperAlert collection in mongodb
+		hiperA = conectToDBHypera()										#hiperAlert collection in mongodb
 
 		while (isinstance(port, int) == False):
 			print("which port do you want to look for?")
@@ -648,7 +598,7 @@ def menu():
 		queryip = "h"
 		queryp = "h"
 		port = ""
-		hiperA = conectToDBHypera()																#hiperAlert collection in mongodb
+		hiperA = conectToDBHypera()								#hiperAlert collection in mongodb
 		
 		print("which Ip do you want to look for?")
 		ip = str(input("type sth like: 192.168.198.203\n"))
@@ -726,14 +676,6 @@ def menu():
 	def exitp():
 		return 0
 	
-	#********************************************************
-	#    add yours functions to do queryes to mongo here....
-	#********************************************************	
-	#
-	#def myfunction(): 
-	#	......
-	
-	
 #menu mapping
 	dict = {
 		0 : exitp,
@@ -744,7 +686,6 @@ def menu():
 		5 : groupby5,
 		6 : groupby6,
 		7 : groupby7,
-		#add yours queryes to mongo here....
 		999 : default
 	}
 	event = dict.get(selectMenu, default)()
@@ -774,7 +715,6 @@ if __name__ == '__main__':
 		print("5 Search port in hiperAlert\n")
 		print("6 Search ip and port in hiperAlert\n")
 		print("7 Search classification protocol in hiperAlert\n")
-		#add yours queryes to mongo here....
 		print("0 exit program\n")
 		event = menu()
 
