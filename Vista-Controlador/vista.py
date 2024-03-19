@@ -1,16 +1,12 @@
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
-from tkinter import messagebox						#create message
-from PIL import Image, ImageTk
+from PIL import ImageTk
 from Controlador import Hyperalert, getHAlert, getIPListAlerts, parsertime, CreateGrafoL1, CreateGrafoL2L3, getGraph
-import tkinter.font as tkFont
 
 
 def showIP(): #muestra la lista de ips
-	
-	#ipText = Text(frTopCenter, padx = 8, pady= 4) #lista de ips
-	
+		
 	listIPs = []
 	listIPs = getIPListAlerts()
 	row=0
@@ -19,8 +15,6 @@ def showIP(): #muestra la lista de ips
 	for i in listIPs:
 		Label(frTopCenterFull, text = i, font= ("verdana",8), justify = "left" ).grid(column=1, row=row)
 		row=row+1
-		#ipText.insert(END, i + '\n')
-	#ipText.grid(column=1 , row=0)
 
 def showDataAlert(tabla1, query):
 	count = 0
@@ -37,7 +31,6 @@ def showDataAlert(tabla1, query):
 		if event["priority"] == 4:
 			color="green"
 
-
 		tabla1.insert("",'end',text=event["priority"], values = (al["_id"], event["classification"], event["event-id"], event["event-second"], event["event-microsecond"]),tags= color)
 		tabla1.tag_configure("red", background="#FF0000")
 		tabla1.tag_configure("orange", background="#FFC100")
@@ -45,7 +38,6 @@ def showDataAlert(tabla1, query):
 		tabla1.tag_configure("green", background="#ACFF1B")
 		count=count+1
 	return count
-
 
 
 def getHyperA():
@@ -66,7 +58,7 @@ def getHyperA():
 			#********************************************************************
 			#                		 top right left frame: Information
 			#********************************************************************
-		frTopRightLeft =  LabelFrame(frTopRightFull,text= ("Information"), font= ("verdana",8, "bold"), padx = 5, pady=5)			#creo el frame
+		frTopRightLeft =  LabelFrame(frTopRightFull,text= ("Information"), font= ("verdana",8, "bold"), padx = 5, pady=5)							#creo el frame
 		frTopRightLeft.grid(column = 2, row = row, rowspan=(nAlerts), columnspan=2,sticky=W+E+N+S)
 
 		tk.Label(frTopRightLeft, text = "Flow ID",  anchor="w" ,font= ("verdana",8, "bold"), justify = "left" ).grid(column=2, row=row, sticky=W+E)
@@ -157,7 +149,7 @@ def getWGrafoL1():
 
 	ip = ipGraphL1.get()
 
-	graf = CreateGrafoL1(ip)		#funcion que crea la imagen del grafo
+	graf = CreateGrafoL1(ip)				#funcion que crea la imagen del grafo
 	graf.render('GraphL1.png', view=True)
 
 	return graf 
@@ -173,8 +165,6 @@ def getWGrafoL2():
 
 
 
-
-
 #*********************************************
 #                  MAIN PROGRAM
 #*********************************************
@@ -187,43 +177,27 @@ if __name__ == '__main__':
 	window.title("Phases of a Cyber-Attack tool")
 	window.geometry("1024x768")
 	window.attributes("-fullscreen", False)
-	
-	#window.grid_columnconfigure(0, weight=1)
-
-
-	#********************************************************************
-	#               crear una etiqueta y mostrarla
-	#********************************************************************
-	#mylable = Label(window, text="Hello world")
-	#mylable.pack()
 
 	#********************************************************************
 	#             crear el lienzo y ponen el wallpaper
 	#********************************************************************
 	container= Frame(window, width= 1024, height =700)#768)
 	## Buttons FONDO
-	#background = Canvas(container, width= 100, height =200, bg= "#6600cc")
 	background = Canvas(container, width= 1024, height =700, bg= "#6600cc")
-	#background.grid(row=0, column=0, columnspan=1,rowspan=6, sticky=N+S+W+E)
 	background.grid(row=0, column=0, columnspan=10, sticky=N+S+W+E)
 	image= ImageTk.PhotoImage(file = "./images/wallpaper.png")
 	background.create_image(0,0, image = image, anchor= NW)
 	
-	
-
-	
-
 	#********************************************************************
 	#                 		top left frame
 	#********************************************************************
-
 	frTopLeft = Frame(container, width= 50, height =213, padx =5, pady=5)
-	#frTopLeft.pack()
-	frTopLeft.grid(column=0, row=0, rowspan=15, sticky=N+W) #distancia a los bordes de la window
+	frTopLeft.grid(column=0, row=0, rowspan=15, sticky=N+W) 				#distancia a los bordes de la window
+
 	#********************************************************************
 	#                		 top center frame
 	#********************************************************************
-	
+
 	frTopCenter =  LabelFrame(container,text= "IPs List", width= 120, height =213,padx = 5, pady=5)
 	backgroundC = Canvas(frTopCenter, width=120 , height =213, bg= "#6600cc")
 	
@@ -246,7 +220,6 @@ if __name__ == '__main__':
 	backgroundC.grid(row=0, column=1, rowspan=6, sticky=N+S+W+E)
 	
 	
-
 	#********************************************************************
 	#                		 top right frame
 	#********************************************************************
@@ -257,8 +230,8 @@ if __name__ == '__main__':
 	backgroundR = Canvas(frTopRight, width= 600, height =200, bg= "#6600cc")
 	backgroundR.grid(row=0, column=2, columnspan=8,rowspan=6, sticky=N+S+W+E)
 
-	scrollbarTRVFrame=Scrollbar(frTopRight, orient=VERTICAL, command=backgroundR.yview) #scroll vertical
-	scrollbarTRHFrame=Scrollbar(frTopRight, orient=HORIZONTAL, command=backgroundR.xview) #scroll Horizontal
+	scrollbarTRVFrame=Scrollbar(frTopRight, orient=VERTICAL, command=backgroundR.yview)						 #scroll vertical
+	scrollbarTRHFrame=Scrollbar(frTopRight, orient=HORIZONTAL, command=backgroundR.xview)					 #scroll Horizontal
 	scrollableFrame= Frame(backgroundR)
 	scrollableFrame.bind(
 		"<Configure>",
@@ -272,7 +245,7 @@ if __name__ == '__main__':
 	scrollbarTRHFrame.grid(row=6, column=0, columnspan=10, sticky=W+E)
 
 	#********************************************************************
-	#                		 bottom left frame                    			***************************************************************************************
+	#                		 bottom left frame                    		
 	#********************************************************************
 	## GRAPH FONDO
 
@@ -287,7 +260,6 @@ if __name__ == '__main__':
 	#********************************************************************
 	#                 top left frame: buttons
 	#********************************************************************
-	#create a button: Button(window, text="HyperAlert")
 	ipListButton = Button(frTopLeft, text="Show IPs" ,padx = 16, pady= 2, command= showIP,  bg= "#e699ff",fg= "#000000")
 	ipListButton.grid(row=0, column = 0, sticky=W+E)
 
@@ -318,8 +290,6 @@ if __name__ == '__main__':
 
 	closeApp=  Button(frTopLeft, text="Close App", padx = 16, pady= 2, command= window.destroy, bg= "#ff8080", fg= "#000000")
 	closeApp.grid(row=9, column = 0, sticky=W+E)
-
-
 
 
 	container.grid(row=0, column=0, columnspan=10,rowspan=2000, sticky=N+S+W+E)
